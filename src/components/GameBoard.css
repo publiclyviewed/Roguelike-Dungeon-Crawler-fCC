@@ -38,3 +38,7 @@
     background-color: darkmagenta;
   }
   
+  .tile.hidden {
+    background-color: black;
+  }
+  

@@ -3,7 +3,7 @@
 const MAP_WIDTH = 30;
 const MAP_HEIGHT = 20;
 
-const TILE_TYPES = {
+export const TILE_TYPES = {
   FLOOR: 'floor',
   WALL: 'wall',
   PLAYER: 'player',
