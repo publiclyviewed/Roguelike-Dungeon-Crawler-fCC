@@ -34,8 +34,42 @@ export function generateMap() {
 
   // Place enemies, items, boss
   for (let i = 0; i < 10; i++) placeEntityRandomly(map, TILE_TYPES.ENEMY);
-  for (let i = 0; i < 6; i++) placeEntityRandomly(map, TILE_TYPES.ITEM);
+  for (let i = 0; i < 6; i++) {
+    const rand = Math.random();
+    const itemTile = {
+      type: TILE_TYPES.ITEM,
+      visible: false,
+      subtype: rand < 0.5 ? 'health' : 'weapon'
+    };
+  
+    if (itemTile.subtype === 'weapon') {
+      itemTile.weapon = {
+        name: 'Sword',
+        damage: 10 + Math.floor(Math.random() * 5)
+      };
+    }
+  
+    placeCustomEntity(map, itemTile);
+  }
+  
   placeEntityRandomly(map, TILE_TYPES.BOSS);
+  function placeCustomEntity(map, entity) {
+    let placed = false;
+    while (!placed) {
+      const x = Math.floor(Math.random() * MAP_WIDTH);
+      const y = Math.floor(Math.random() * MAP_HEIGHT);
+      const tile = map[y][x];
+      if (tile.type === TILE_TYPES.FLOOR) {
+        map[y][x] = {
+          ...entity,
+          x,
+          y
+        };
+        placed = true;
+      }
+    }
+  }
+  
 
   return map;
 }

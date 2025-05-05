@@ -7,6 +7,15 @@ function App() {
   const [playerPos, setPlayerPos] = useState({ x: 0, y: 0 });
   const [inventory, setInventory] = useState([]);
 
+  // ✅ Player stats (added)
+  const [playerStats, setPlayerStats] = useState({
+    health: 100,
+    maxHealth: 100,
+    level: 1,
+    xp: 0,
+    weapon: { name: 'Fists', damage: 5 }
+  });
+
   useEffect(() => {
     const newMap = generateMap();
 
@@ -56,11 +65,28 @@ function App() {
     const newMap = map.map(row => row.map(tile => ({ ...tile })));
     const tileType = destination.type;
 
-    // Handle item pickup
-    if (tileType === TILE_TYPES.ITEM) {
-      setInventory(prev => [...prev, 'Mysterious Item']);
-    }
+    // ✅ Handle item pickup
+// Inside movePlayer
+if (tileType === TILE_TYPES.ITEM) {
+  if (destination.subtype === 'health') {
+    const healAmount = 20;
+    setPlayerStats(prev => ({
+      ...prev,
+      health: Math.min(prev.maxHealth, prev.health + healAmount)
+    }));
+    setInventory(prev => [...prev, 'Health Potion']);
+  } else if (destination.subtype === 'weapon') {
+    const newWeapon = destination.weapon;
+    setPlayerStats(prev => ({
+      ...prev,
+      weapon: newWeapon
+    }));
+    setInventory(prev => [...prev, newWeapon.name]);
+  }
+}
 
+
+    // Move player
     newMap[playerPos.y][playerPos.x].type = TILE_TYPES.FLOOR;
     newMap[newY][newX].type = TILE_TYPES.PLAYER;
 
@@ -84,6 +110,15 @@ function App() {
   return (
     <div>
       <h1>Roguelike Dungeon Crawler</h1>
+
+      {/* ✅ Player stats display */}
+      <div style={{ marginBottom: '1rem' }}>
+        <p><strong>Health:</strong> {playerStats.health} / {playerStats.maxHealth}</p>
+        <p><strong>Level:</strong> {playerStats.level}</p>
+        <p><strong>XP:</strong> {playerStats.xp}</p>
+        <p><strong>Weapon:</strong> {playerStats.weapon.name} (DMG: {playerStats.weapon.damage})</p>
+      </div>
+
       {map.length > 0 && <GameBoard map={map} />}
 
       <div style={{ marginTop: '1rem' }}>
