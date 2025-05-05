@@ -1,0 +1,40 @@
+.game-board {
+    display: inline-block;
+    margin: 20px auto;
+  }
+  
+  .row {
+    display: flex;
+  }
+  
+  .tile {
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    border: 1px solid #222;
+  }
+  
+  .tile.floor {
+    background-color: #333;
+  }
+  
+  .tile.wall {
+    background-color: #666;
+  }
+  
+  .tile.player {
+    background-color: limegreen;
+  }
+  
+  .tile.enemy {
+    background-color: crimson;
+  }
+  
+  .tile.item {
+    background-color: gold;
+  }
+  
+  .tile.boss {
+    background-color: darkmagenta;
+  }
+  
