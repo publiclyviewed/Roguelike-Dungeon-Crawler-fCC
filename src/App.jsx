@@ -62,6 +62,39 @@ function App() {
     const destination = map[newY][newX];
     if (destination.type === TILE_TYPES.WALL) return;
 
+// ⚔️ Handle combat
+if (destination.type === TILE_TYPES.ENEMY || destination.type === TILE_TYPES.BOSS) {
+  const enemy = destination;
+
+  // Player attacks enemy
+  enemy.health -= playerStats.weapon.damage;
+
+  if (enemy.health > 0) {
+    // Enemy is still alive → it retaliates
+    setPlayerStats(prev => ({
+      ...prev,
+      health: Math.max(0, prev.health - enemy.damage)
+    }));
+    alert(`You hit the ${enemy.type === TILE_TYPES.BOSS ? 'boss' : 'enemy'} for ${playerStats.weapon.damage} damage! It hits back for ${enemy.damage}.`);
+    return; // Stay on the same tile — enemy blocks movement
+  } else {
+    // Enemy defeated
+    setPlayerStats(prev => ({
+      ...prev,
+      xp: prev.xp + enemy.xp
+    }));
+    alert(`You defeated the ${enemy.type === TILE_TYPES.BOSS ? 'boss' : 'enemy'}! Gained ${enemy.xp} XP.`);
+    // Enemy tile becomes floor — player can move onto it
+    newMap[newY][newX] = {
+      type: TILE_TYPES.FLOOR,
+      visible: true,
+      x: newX,
+      y: newY
+    };
+  }
+}
+
+
     const newMap = map.map(row => row.map(tile => ({ ...tile })));
     const tileType = destination.type;
 
