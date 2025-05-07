@@ -1,107 +1,68 @@
-
-// Map tile types: floor, wall, player, enemy, item, boss
-
-const MAP_WIDTH = 30;
-const MAP_HEIGHT = 20;
-
-export const TILE_TYPES = {
-  FLOOR: 'floor',
-  WALL: 'wall',
-  PLAYER: 'player',
-  ENEMY: 'enemy',
-  ITEM: 'item',
-  BOSS: 'boss'
+const TILE_TYPES = {
+  WALL: 0,
+  FLOOR: 1,
+  PLAYER: 2,
+  ENEMY: 3,
+  ITEM: 4,
+  EXIT: 5,
 };
 
-export function generateMap() {
-  const map = [];
+export function generateMap(width, height) {
+  const map = Array.from({ length: height }, () => Array(width).fill(TILE_TYPES.WALL));
 
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    const row = [];
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      const isWall = Math.random() < 0.1; // 10% chance to be a wall
-      row.push({
-        type: isWall ? TILE_TYPES.WALL : TILE_TYPES.FLOOR,
-        visible: false,
-        x,
-        y
-      });
-    }
-    map.push(row);
-  }
-
-  // Place player at a random floor tile
-  placeEntityRandomly(map, TILE_TYPES.PLAYER);
-
-  // Place enemies, items, boss
-  // Place enemies with stats
-  for (let i = 0; i < 10; i++) {
-    const enemyTile = {
-      type: TILE_TYPES.ENEMY,
-      visible: false,
-      health: 30 + Math.floor(Math.random() * 20),
-      damage: 5 + Math.floor(Math.random() * 5),
-      xp: 10 + Math.floor(Math.random() * 10)
-    };
-    placeCustomEntity(map, enemyTile);
-  }
-  
-  for (let i = 0; i < 6; i++) {
-    const rand = Math.random();
-    const itemTile = {
-      type: TILE_TYPES.ITEM,
-      visible: false,
-      subtype: rand < 0.5 ? 'health' : 'weapon'
-    };
-  
-    if (itemTile.subtype === 'weapon') {
-      itemTile.weapon = {
-        name: 'Sword',
-        damage: 10 + Math.floor(Math.random() * 5)
-      };
-    }
-  
-    placeCustomEntity(map, itemTile);
-  }
-  
-  const bossTile = {
-    type: TILE_TYPES.BOSS,
-    visible: false,
-    health: 100,
-    damage: 15,
-    xp: 50
-  };
-  placeCustomEntity(map, bossTile);
-  
-  function placeCustomEntity(map, entity) {
-    let placed = false;
-    while (!placed) {
-      const x = Math.floor(Math.random() * MAP_WIDTH);
-      const y = Math.floor(Math.random() * MAP_HEIGHT);
-      const tile = map[y][x];
-      if (tile.type === TILE_TYPES.FLOOR) {
-        map[y][x] = {
-          ...entity,
-          x,
-          y
-        };
-        placed = true;
-      }
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      map[y][x] = TILE_TYPES.FLOOR;
     }
   }
 
-  return map;
+  const playerPos = placeRandom(map, TILE_TYPES.PLAYER);
+  const enemies = placeEnemies(map, 5);
+  const items = placeItems(map, 4);
+  const exit = placeRandom(map, TILE_TYPES.EXIT);
+
+  return { map, playerPos, enemies, items, exit };
 }
 
-function placeEntityRandomly(map, type) {
-  let placed = false;
-  while (!placed) {
-    const x = Math.floor(Math.random() * MAP_WIDTH);
-    const y = Math.floor(Math.random() * MAP_HEIGHT);
-    const tile = map[y][x];
-    if (tile.type === TILE_TYPES.FLOOR) {
-      tile.type = type;
-      placed = true;
-    }
+function placeRandom(map, type) {
+  let x, y;
+  do {
+    x = Math.floor(Math.random() * map[0].length);
+    y = Math.floor(Math.random() * map.length);
+  } while (map[y][x] !== 1);
+  map[y][x] = type;
+  return { x, y };
+}
+
+function placeEnemies(map, count) {
+  const enemies = [];
+  for (let i = 0; i < count; i++) {
+    const pos = placeRandom(map, 3);
+    enemies.push({
+      ...pos,
+      hp: 8 + Math.floor(Math.random() * 4),
+      attack: 2 + Math.floor(Math.random() * 3),
+      type: ['Goblin', 'Slime', 'Skeleton'][Math.floor(Math.random() * 3)],
+    });
   }
+  return enemies;
+}
+
+function placeItems(map, count) {
+  const items = [];
+  for (let i = 0; i < count; i++) {
+    const pos = placeRandom(map, 4);
+    items.push({
+      ...pos,
+      type: Math.random() > 0.5 ? 'potion' : 'weapon',
+      effect:
+        Math.random() > 0.5
+          ? { heal: 10 + Math.floor(Math.random() * 10) }
+          : {
+              damage: 3 + Math.floor(Math.random() * 4),
+              name: ['Dagger', 'Sword', 'Axe'][Math.floor(Math.random() * 3)],
+            },
+    });
+  }
+  return items;
 }

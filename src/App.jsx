@@ -1,149 +1,84 @@
-import { useState, useEffect } from 'react';
-import { generateMap, TILE_TYPES } from './utils/mapGenerator';
+import React, { useEffect, useState } from 'react';
 import GameBoard from './components/GameBoard';
-import { handleCombat } from './utils/combat'; // Import the combat handling function
-import MessageLog from './components/MessageLog'; // Import the message log component
+import HUD from './components/HUD';
+import MessageLog from './components/MessageLog';
+import { generateMap } from './utils/mapGenerator';
+import { resolveCombat } from './utils/combat';
+import './App.css';
+
+const initialPlayer = {
+  hp: 100,
+  maxHp: 100,
+  weapon: { name: 'Rusty Sword', damage: 5 },
+  x: 1,
+  y: 1,
+  inventory: [],
+};
 
 function App() {
   const [map, setMap] = useState([]);
-  const [playerPos, setPlayerPos] = useState({ x: 0, y: 0 });
-  const [inventory, setInventory] = useState([]);
-  const [playerStats, setPlayerStats] = useState({
-    health: 100,
-    maxHealth: 100,
-    level: 1,
-    xp: 0,
-    weapon: { name: 'Fists', damage: 5 }
-  });
-  const [messages, setMessages] = useState([]); // State to hold combat messages
+  const [player, setPlayer] = useState(initialPlayer);
+  const [messages, setMessages] = useState(['Welcome to the dungeon!']);
 
   useEffect(() => {
-    const newMap = generateMap();
-    let pos = { x: 0, y: 0 };
-    for (let y = 0; y < newMap.length; y++) {
-      for (let x = 0; x < newMap[y].length; x++) {
-        if (newMap[y][x].type === TILE_TYPES.PLAYER) {
-          pos = { x, y };
-          break;
-        }
-      }
-    }
-
-    const visibleMap = updateVisibility(newMap, pos.x, pos.y);
-    setMap(visibleMap);
-    setPlayerPos(pos);
+    const newMap = generateMap(20, 20);
+    newMap[player.y][player.x] = 'player';
+    setMap(newMap);
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      let dx = 0, dy = 0;
-      if (e.key === 'ArrowUp') dy = -1;
-      else if (e.key === 'ArrowDown') dy = 1;
-      else if (e.key === 'ArrowLeft') dx = -1;
-      else if (e.key === 'ArrowRight') dx = 1;
-      else return;
+    const handleKeyPress = (e) => {
+      let dx = 0;
+      let dy = 0;
+      switch (e.key.toLowerCase()) {
+        case 'w': dy = -1; break;
+        case 's': dy = 1; break;
+        case 'a': dx = -1; break;
+        case 'd': dx = 1; break;
+        default: return;
+      }
 
-      movePlayer(dx, dy);
+      const newX = player.x + dx;
+      const newY = player.y + dy;
+
+      if (newY >= 0 && newY < map.length && newX >= 0 && newX < map[0].length) {
+        const targetTile = map[newY][newX];
+        let newMessages = [];
+
+        if (typeof targetTile === 'object' && targetTile.type === 'enemy') {
+          const result = resolveCombat({ ...player }, { ...targetTile });
+          setPlayer(result.player);
+          map[newY][newX] = result.enemy.hp > 0 ? result.enemy : 'floor';
+          newMessages = result.messages;
+        } else if (typeof targetTile === 'object' && targetTile.type === 'item') {
+          newMessages.push(`You picked up ${targetTile.name}.`);
+          player.inventory.push(targetTile);
+          map[newY][newX] = 'floor';
+          setPlayer({ ...player });
+        } else if (targetTile === 'floor') {
+          map[player.y][player.x] = 'floor';
+          map[newY][newX] = 'player';
+          setPlayer({ ...player, x: newX, y: newY });
+        }
+
+        setMessages((prev) => [...prev, ...newMessages]);
+        setMap([...map]);
+      }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [playerPos, map]);
-
-  function movePlayer(dx, dy) {
-    const newX = playerPos.x + dx;
-    const newY = playerPos.y + dy;
-
-    if (
-      newY < 0 || newY >= map.length ||
-      newX < 0 || newX >= map[0].length
-    ) return;
-
-    const destination = map[newY][newX];
-
-    if (destination.type === TILE_TYPES.WALL) return;
-
-    // ⚔️ Handle combat
-    if (destination.type === TILE_TYPES.ENEMY || destination.type === TILE_TYPES.BOSS) {
-      const enemy = destination;
-      const combatMessages = handleCombat(playerStats, enemy, setPlayerStats, setMap, map, { x: newX, y: newY });
-      setMessages(prevMessages => [...prevMessages, ...combatMessages]);
-      return; // Stay on the same tile — enemy blocks movement
-    }
-
-    // ✅ Handle item pickup
-    if (destination.type === TILE_TYPES.ITEM) {
-      if (destination.subtype === 'health') {
-        const healAmount = 20;
-        setPlayerStats(prev => ({
-          ...prev,
-          health: Math.min(prev.maxHealth, prev.health + healAmount)
-        }));
-        setInventory(prev => [...prev, 'Health Potion']);
-      } else if (destination.subtype === 'weapon') {
-        const newWeapon = destination.weapon;
-        setPlayerStats(prev => ({
-          ...prev,
-          weapon: newWeapon
-        }));
-        setInventory(prev => [...prev, newWeapon.name]);
-      }
-    }
-
-    // Move player
-    const newMap = map.map(row => row.map(tile => ({ ...tile })));
-    newMap[playerPos.y][playerPos.x].type = TILE_TYPES.FLOOR;
-    newMap[newY][newX].type = TILE_TYPES.PLAYER;
-
-    const updatedMap = updateVisibility(newMap, newX, newY);
-    setMap(updatedMap);
-    setPlayerPos({ x: newX, y: newY });
-  }
-
-  function updateVisibility(map, px, py, radius = 3) {
-    return map.map((row, y) =>
-      row.map((tile, x) => {
-        const dist = Math.abs(x - px) + Math.abs(y - py);
-        return {
-          ...tile,
-          visible: dist <= radius,
-        };
-      })
-    );
-  }
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [map, player]);
 
   return (
-    <div>
+    <div className="App">
       <h1>Roguelike Dungeon Crawler</h1>
-
-      {/* ✅ Player stats display */}
-      <div style={{ marginBottom: '1rem' }}>
-        <p><strong>Health:</strong> {playerStats.health} / {playerStats.maxHealth}</p>
-        <p><strong>Level:</strong> {playerStats.level}</p>
-        <p><strong>XP:</strong> {playerStats.xp}</p>
-        <p><strong>Weapon:</strong> {playerStats.weapon.name} (DMG: {playerStats.weapon.damage})</p>
-      </div>
-
-      {/* Game Board */}
-      {map.length > 0 && <GameBoard map={map} />}
-
-      {/* Message Log */}
-      <div style={{ marginTop: '1rem' }}>
-        <MessageLog messages={messages} />
-      </div>
-
-      {/* Inventory */}
-      <div style={{ marginTop: '1rem' }}>
-        <h2>Inventory</h2>
-        {inventory.length === 0 ? (
-          <p>Nothing yet...</p>
-        ) : (
-          <ul>
-            {inventory.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        )}
+      <div className="game-container">
+        <GameBoard map={map} />
+        <div className="side-panel">
+          <HUD player={player} />
+          <MessageLog messages={messages} />
+        </div>
       </div>
     </div>
   );

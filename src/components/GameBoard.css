@@ -1,44 +1,39 @@
 .game-board {
-    display: inline-block;
-    margin: 20px auto;
-  }
-  
-  .row {
-    display: flex;
-  }
-  
-  .tile {
-    width: 20px;
-    height: 20px;
-    box-sizing: border-box;
-    border: 1px solid #222;
-  }
-  
-  .tile.floor {
-    background-color: #333;
-  }
-  
-  .tile.wall {
-    background-color: #666;
-  }
-  
-  .tile.player {
-    background-color: limegreen;
-  }
-  
-  .tile.enemy {
-    background-color: crimson;
-  }
-  
-  .tile.item {
-    background-color: gold;
-  }
-  
-  .tile.boss {
-    background-color: darkmagenta;
-  }
-  
-  .tile.hidden {
-    background-color: black;
-  }
-  
+  display: inline-block;
+  background-color: #222;
+  padding: 0.5rem;
+  border: 1px solid #444;
+  font-family: monospace;
+}
+
+.row {
+  height: 1rem;
+}
+
+.tile {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  line-height: 1rem;
+  text-align: center;
+}
+
+.wall {
+  color: #777;
+}
+
+.floor {
+  color: #aaa;
+}
+
+.player {
+  color: #0f0;
+}
+
+.enemy {
+  color: #f00;
+}
+
+.item {
+  color: #ff0;
+}

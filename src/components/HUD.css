@@ -1,0 +1,22 @@
+.hud {
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: #eee;
+  }
+  
+  .hud h2, .hud h3 {
+    margin: 0.5rem 0;
+  }
+  
+  .hud ul {
+    list-style: none;
+    padding-left: 1rem;
+    text-align: left;
+  }
+  
+  .hud li {
+    margin-bottom: 0.25rem;
+  }
+  

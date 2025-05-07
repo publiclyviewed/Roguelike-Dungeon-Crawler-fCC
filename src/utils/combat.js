@@ -1,40 +1,20 @@
-// combat.js
+export function resolveCombat(player, enemy) {
+  const playerAttack = Math.floor(Math.random() * player.weapon.damage) + 1;
+  const enemyAttack = Math.floor(Math.random() * enemy.attack) + 1;
 
-export function handleCombat(player, enemy, setPlayerStats, setMap, map, playerPos) {
-  const damageDealt = player.weapon.damage;
-  const damageTaken = enemy.damage;
+  enemy.hp -= playerAttack;
+  const messages = [`You attack the ${enemy.type} for ${playerAttack} damage.`];
 
-  // Player attacks enemy
-  enemy.health -= damageDealt;
-
-  // Update the message log
-  const messages = [];
-  messages.push(`You hit the ${enemy.type === 'BOSS' ? 'boss' : 'enemy'} for ${damageDealt} damage!`);
-
-  if (enemy.health > 0) {
-    // Enemy retaliates if still alive
-    setPlayerStats(prevStats => ({
-      ...prevStats,
-      health: Math.max(0, prevStats.health - damageTaken),
-    }));
-    messages.push(`The ${enemy.type === 'BOSS' ? 'boss' : 'enemy'} attacks you for ${damageTaken} damage!`);
+  if (enemy.hp > 0) {
+    player.hp -= enemyAttack;
+    messages.push(`The ${enemy.type} hits you back for ${enemyAttack} damage.`);
   } else {
-    // Enemy defeated, update player stats and map
-    setPlayerStats(prevStats => ({
-      ...prevStats,
-      xp: prevStats.xp + enemy.xp,
-    }));
-    messages.push(`You defeated the ${enemy.type === 'BOSS' ? 'boss' : 'enemy'}! Gained ${enemy.xp} XP.`);
-
-    // Replace enemy tile with a floor tile
-    const newMap = map.map(row => row.map(tile => ({ ...tile })));
-    newMap[playerPos.y][playerPos.x] = {
-      ...newMap[playerPos.y][playerPos.x],
-      type: 'FLOOR', // Make the enemy tile a floor
-      visible: true,
-    };
-    setMap(newMap);
+    messages.push(`You defeated the ${enemy.type}!`);
   }
 
-  return messages;
+  return {
+    player,
+    enemy,
+    messages,
+  };
 }
