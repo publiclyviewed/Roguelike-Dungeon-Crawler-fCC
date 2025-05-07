@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.health-bar {
+     width: 100px;
+     height: 10px;
+     background: #400;
+     margin: 5px auto;
+   }
+   .health-fill {
+     height: 10px;
+     background: #0f0;
+   }
+  

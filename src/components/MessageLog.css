@@ -1,0 +1,16 @@
+.message-log {
+    background: #111;
+    color: #0f0;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: monospace;
+    height: 80px;
+    overflow-y: auto;
+    border: 1px solid #333;
+  }
+  
+  .message-log p {
+    margin: 0;
+    font-size: 12px;
+  }
+  

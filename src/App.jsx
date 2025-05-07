@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { generateMap, TILE_TYPES } from './utils/mapGenerator';
 import GameBoard from './components/GameBoard';
+import { handleCombat } from './utils/combat'; // Import the combat handling function
+import MessageLog from './components/MessageLog'; // Import the message log component
 
 function App() {
   const [map, setMap] = useState([]);
   const [playerPos, setPlayerPos] = useState({ x: 0, y: 0 });
   const [inventory, setInventory] = useState([]);
-
-  // ✅ Player stats (added)
   const [playerStats, setPlayerStats] = useState({
     health: 100,
     maxHealth: 100,
@@ -15,10 +15,10 @@ function App() {
     xp: 0,
     weapon: { name: 'Fists', damage: 5 }
   });
+  const [messages, setMessages] = useState([]); // State to hold combat messages
 
   useEffect(() => {
     const newMap = generateMap();
-
     let pos = { x: 0, y: 0 };
     for (let y = 0; y < newMap.length; y++) {
       for (let x = 0; x < newMap[y].length; x++) {
@@ -60,66 +60,38 @@ function App() {
     ) return;
 
     const destination = map[newY][newX];
+
     if (destination.type === TILE_TYPES.WALL) return;
 
-// ⚔️ Handle combat
-if (destination.type === TILE_TYPES.ENEMY || destination.type === TILE_TYPES.BOSS) {
-  const enemy = destination;
-
-  // Player attacks enemy
-  enemy.health -= playerStats.weapon.damage;
-
-  if (enemy.health > 0) {
-    // Enemy is still alive → it retaliates
-    setPlayerStats(prev => ({
-      ...prev,
-      health: Math.max(0, prev.health - enemy.damage)
-    }));
-    alert(`You hit the ${enemy.type === TILE_TYPES.BOSS ? 'boss' : 'enemy'} for ${playerStats.weapon.damage} damage! It hits back for ${enemy.damage}.`);
-    return; // Stay on the same tile — enemy blocks movement
-  } else {
-    // Enemy defeated
-    setPlayerStats(prev => ({
-      ...prev,
-      xp: prev.xp + enemy.xp
-    }));
-    alert(`You defeated the ${enemy.type === TILE_TYPES.BOSS ? 'boss' : 'enemy'}! Gained ${enemy.xp} XP.`);
-    // Enemy tile becomes floor — player can move onto it
-    newMap[newY][newX] = {
-      type: TILE_TYPES.FLOOR,
-      visible: true,
-      x: newX,
-      y: newY
-    };
-  }
-}
-
-
-    const newMap = map.map(row => row.map(tile => ({ ...tile })));
-    const tileType = destination.type;
+    // ⚔️ Handle combat
+    if (destination.type === TILE_TYPES.ENEMY || destination.type === TILE_TYPES.BOSS) {
+      const enemy = destination;
+      const combatMessages = handleCombat(playerStats, enemy, setPlayerStats, setMap, map, { x: newX, y: newY });
+      setMessages(prevMessages => [...prevMessages, ...combatMessages]);
+      return; // Stay on the same tile — enemy blocks movement
+    }
 
     // ✅ Handle item pickup
-// Inside movePlayer
-if (tileType === TILE_TYPES.ITEM) {
-  if (destination.subtype === 'health') {
-    const healAmount = 20;
-    setPlayerStats(prev => ({
-      ...prev,
-      health: Math.min(prev.maxHealth, prev.health + healAmount)
-    }));
-    setInventory(prev => [...prev, 'Health Potion']);
-  } else if (destination.subtype === 'weapon') {
-    const newWeapon = destination.weapon;
-    setPlayerStats(prev => ({
-      ...prev,
-      weapon: newWeapon
-    }));
-    setInventory(prev => [...prev, newWeapon.name]);
-  }
-}
-
+    if (destination.type === TILE_TYPES.ITEM) {
+      if (destination.subtype === 'health') {
+        const healAmount = 20;
+        setPlayerStats(prev => ({
+          ...prev,
+          health: Math.min(prev.maxHealth, prev.health + healAmount)
+        }));
+        setInventory(prev => [...prev, 'Health Potion']);
+      } else if (destination.subtype === 'weapon') {
+        const newWeapon = destination.weapon;
+        setPlayerStats(prev => ({
+          ...prev,
+          weapon: newWeapon
+        }));
+        setInventory(prev => [...prev, newWeapon.name]);
+      }
+    }
 
     // Move player
+    const newMap = map.map(row => row.map(tile => ({ ...tile })));
     newMap[playerPos.y][playerPos.x].type = TILE_TYPES.FLOOR;
     newMap[newY][newX].type = TILE_TYPES.PLAYER;
 
@@ -152,8 +124,15 @@ if (tileType === TILE_TYPES.ITEM) {
         <p><strong>Weapon:</strong> {playerStats.weapon.name} (DMG: {playerStats.weapon.damage})</p>
       </div>
 
+      {/* Game Board */}
       {map.length > 0 && <GameBoard map={map} />}
 
+      {/* Message Log */}
+      <div style={{ marginTop: '1rem' }}>
+        <MessageLog messages={messages} />
+      </div>
+
+      {/* Inventory */}
       <div style={{ marginTop: '1rem' }}>
         <h2>Inventory</h2>
         {inventory.length === 0 ? (

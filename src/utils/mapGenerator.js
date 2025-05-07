@@ -1,3 +1,4 @@
+
 // Map tile types: floor, wall, player, enemy, item, boss
 
 const MAP_WIDTH = 30;
@@ -34,7 +35,7 @@ export function generateMap() {
 
   // Place enemies, items, boss
   // Place enemies with stats
-for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i++) {
     const enemyTile = {
       type: TILE_TYPES.ENEMY,
       visible: false,
@@ -88,7 +89,6 @@ for (let i = 0; i < 10; i++) {
       }
     }
   }
-  
 
   return map;
 }
