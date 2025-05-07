@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './MessageLog.css';
 
-function MessageLog({ messages }) {
-  return (
-    <div className="message-log">
-      <h2>Message Log</h2>
-      <div className="log-box">
-        {messages.slice(-10).map((msg, i) => (
-          <div key={i} className="message">{msg}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const MessageLog = ({ messages }) => {
+    const messagesEndRef = useRef(null);
+
+    // Auto-scroll to the bottom when messages update
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
+    return (
+        <div className="message-log">
+            <h3>Messages</h3>
+            <div className="messages-list">
+                {messages.map((msg, index) => (
+                    <p key={index}>{msg}</p>
+                ))}
+                <div ref={messagesEndRef} /> {/* Element to scroll to */}
+            </div>
+        </div>
+    );
+};
 
 export default MessageLog;

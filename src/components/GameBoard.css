@@ -1,39 +1,52 @@
 .game-board {
-  display: inline-block;
-  background-color: #222;
-  padding: 0.5rem;
-  border: 1px solid #444;
-  font-family: monospace;
-}
-
-.row {
-  height: 1rem;
+  display: grid;
+  /* grid-template-columns and grid-template-rows are set inline */
+  border: 1px solid #444; /* Border around the board */
 }
 
 .tile {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  line-height: 1rem;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8em; /* Adjust font size for symbols */
+  user-select: none; /* Prevent selecting tile text */
+  box-sizing: border-box; /* Include border and padding in the element's total width and height */
 }
 
-.wall {
-  color: #777;
+.tile.floor {
+  background-color: #444; /* Dark floor color */
 }
 
-.floor {
-  color: #aaa;
+.tile.wall {
+  background-color: #666; /* Darker wall color */
+}
+
+.tile.hidden {
+  background-color: #222; /* Very dark for fog of war */
+  color: transparent; /* Hide symbols in fog */
+}
+
+/* Styles for entities */
+.entity {
+  font-weight: bold;
 }
 
 .player {
-  color: #0f0;
+  color: #00ff00; /* Green player */
 }
 
 .enemy {
-  color: #f00;
+  color: #ff0000; /* Red enemies */
 }
 
-.item {
-  color: #ff0;
+.boss {
+  color: #ff8c00; /* Orange boss */
+}
+
+.health {
+  color: #00ffff; /* Cyan health potions */
+}
+
+.weapon {
+  color: #ffff00; /* Yellow weapons */
 }
